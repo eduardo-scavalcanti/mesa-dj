@@ -5,12 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(mesa-dj
-    main.cpp
-    Console.cpp
-    AudioEngine.cpp
-    Instrumento.cpp
-    MesaDeDJ.cpp
+    src/main/main.cpp
+    src/cpp/Console.cpp
+    src/cpp/AudioEngine.cpp
+    src/cpp/Instrumento.cpp
+    src/cpp/MesaDeDJ.cpp
 )
+
+target_include_directories(mesa-dj PRIVATE src/h)
 
 find_package(Threads REQUIRED)
 target_link_libraries(mesa-dj PRIVATE Threads::Threads)

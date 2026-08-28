@@ -1,0 +1,11 @@
+# Binario compilado no Mac pelo mesa-dj.command (especifico da arquitetura,
+# nao deve ser versionado — cada maquina compila o seu).
+mesa-dj-mac
+
+# Diretorio de build do CMake
+build/
+
+# Artefatos comuns de objeto/depuracao
+*.o
+*.obj
+*.dSYM/
