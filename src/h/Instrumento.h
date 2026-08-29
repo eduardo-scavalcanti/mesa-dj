@@ -27,7 +27,7 @@ class Instrumento
 {
 public:
     // Fotografia consistente do estado, tirada de uma vez so sob o lock.
-    struct Status
+    typedef struct Status
     {
         std::string   nome;
         std::string   arquivo;
@@ -36,7 +36,7 @@ public:
         int           volume;
         unsigned long batidas;
         bool          comSom;
-    };
+    } Status;
 
     Instrumento(std::string nome, std::string arquivo, int bpm, AudioEngine& audio);
     ~Instrumento();

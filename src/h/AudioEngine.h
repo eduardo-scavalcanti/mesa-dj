@@ -65,7 +65,7 @@ class AudioEngine
 
     private:
         ma_engine engine_{};
-        bool      ok_ = false;
+        bool ok_ = false;
 };
 
 // ---------------------------------------------------------------------------

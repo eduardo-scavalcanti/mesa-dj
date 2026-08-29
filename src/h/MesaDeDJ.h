@@ -31,12 +31,12 @@ public:
     explicit MesaDeDJ(AudioEngine& audio);
     ~MesaDeDJ();
 
-    MesaDeDJ(const MesaDeDJ&)            = delete;
+    MesaDeDJ(const MesaDeDJ&) = delete;
     MesaDeDJ& operator=(const MesaDeDJ&) = delete;
 
     // Cria, carrega o .wav e ja poe a thread para rodar.
     bool adicionar(const std::string& nome, const std::string& arquivo,
-                   int bpm, std::string& erro);
+    int bpm, std::string& erro);
 
     bool remover(const std::string& nome);
 
@@ -59,7 +59,7 @@ private:
 
     AudioEngine& audio_;
 
-    mutable std::mutex                       faixasMtx_;
+    mutable std::mutex faixasMtx_;
     std::vector<std::shared_ptr<Instrumento>> faixas_;
 
     std::thread             painel_;

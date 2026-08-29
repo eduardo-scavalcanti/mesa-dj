@@ -9,6 +9,7 @@
 bool AudioEngine::iniciar() 
 {
     if (ok_) return true;
+    
     if (ma_engine_init(nullptr, &engine_) != MA_SUCCESS) 
     {
         std::cerr << "[áudio] Não foi possivel abrir o dispositivo de áudio.\n"
@@ -16,6 +17,7 @@ bool AudioEngine::iniciar()
                      "continuam sendo contadas no painel).\n";
         return false;
     }
+    
     ok_ = true;
     return true;
 }

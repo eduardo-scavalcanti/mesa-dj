@@ -19,10 +19,10 @@ std::string paraTexto(Estado e)
 }
 
 Instrumento::Instrumento(std::string nome, std::string arquivo, int bpm, AudioEngine& audio)
-    : nome_(std::move(nome)),
-      arquivo_(std::move(arquivo)),
-      audio_(audio),
-      bpm_(std::clamp(bpm, BPM_MIN, BPM_MAX)) {}
+    :nome_(std::move(nome)),
+    arquivo_(std::move(arquivo)),
+    audio_(audio),
+    bpm_(std::clamp(bpm, BPM_MIN, BPM_MAX)) {}
 
 Instrumento::~Instrumento()
 {
@@ -92,6 +92,7 @@ void Instrumento::encerrar()
     // O join() acontece FORA do lock. Se tentassemos dar join segurando
     // mtx_, a thread nunca conseguiria adquirir o mutex para terminar
     // -> deadlock classico.
+
     if (thread_.joinable()) 
     {
         thread_.join();
@@ -146,6 +147,7 @@ void Instrumento::loop()
 
             // Dorme aqui enquanto estiver pausado. O predicado tambem protege
             // contra "spurious wakeups" (a cv pode acordar sozinha).
+            
             cv_.wait(lock, [this] 
             {
                 return encerrar_ || estado_ == Estado::Tocando;

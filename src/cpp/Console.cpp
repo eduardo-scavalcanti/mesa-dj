@@ -23,10 +23,12 @@ void habilitarAnsi()
 #ifdef _WIN32
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD modo = 0;
+
     if (h != INVALID_HANDLE_VALUE && GetConsoleMode(h, &modo))
     {
         SetConsoleMode(h, modo | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     }
+    
     SetConsoleOutputCP(CP_UTF8);
 #endif
 }

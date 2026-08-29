@@ -18,11 +18,11 @@
 <h2 align="center">👤👨‍🎓 Integrantes do Projeto: <br>
 <img src="https://img.shields.io/badge/-Equipe-111827?style=flat-square&logo=github&logoColor=white" height="18"/></h2>
 <ul>
-<li>Lucas Paguetti Pereira <a href="https://www.linkedin.com/in/lucas-paguetti-pereira" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/wqiluc" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li><b>Eduardo de Souza Cavalcanti Junior (Líder 👑)</b> <a href="https://www.linkedin.com/in/eduardoscavalcantij/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/eduardo-scavalcanti" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li>Felipe Franca Alves de Lima <a href="https://www.linkedin.com/in/felipefrancaal/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/ffrancaal" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li>Helamã Leone de Lima Procídio <a href="https://www.linkedin.com/in/helam%C3%A3-procidio-428772367/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/procidiohelama-star" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li>João Pedro Arruda Guimarães <a href="https://www.linkedin.com/in/jo%C3%A3o-pedro-arruda-guimar%C3%A3es-157952287/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/Jp230603" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
+<li>Lucas Paguetti Pereira <a href="https://www.linkedin.com/in/lucas-paguetti-pereira" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/wqiluc" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li>Tiago Luiz Moreira de Vasconcelos <a href="https://www.linkedin.com/in/tiagoluiz23/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/tlmv23" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 <li>Victor José Paes e Silva <a href="https://www.linkedin.com/in/viictorpaes/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a> <a href="https://github.com/viictorpaes" target="_blank"><img src="https://img.shields.io/badge/GitHub-000000?style=for-the-badge&logo=github&logoColor=white" height="16"/></a></li>
 </ul>
@@ -100,7 +100,7 @@ No **Linux**, a miniaudio carrega ALSA/PulseAudio/JACK dinamicamente em tempo de
 4. **Siga os seguintes comandos 🕹️** <br>
    <ul>
   <li>
-  <img src="https://img.shields.io/badge/Windows%2010%2F11-2563EB?style=flat&logo=windows&logoColor=00ADEF" alt="Windows 10/11"/>  <br>
+ <img src="https://img.shields.io/badge/windows%2010%2F11-2563EB?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cGF0aCBmaWxsPSIjMDBBREVGIiBkPSJNMTI2IDEuNjM3bC02NyA5LjgzNHY0OS44MzFsNjctLjUzNHpNMS42NDcgNjYuNzA5bC4wMDMgNDIuNDA0IDUwLjc5MSA2Ljk4My0uMDQtNDkuMDU3em01Ni44Mi42OGwuMDk0IDQ5LjQ2NSA2Ny4zNzYgOS41MDkuMDE2LTU4Ljg2M3pNMS42MSAxOS4yOTdsLjA0NyA0Mi4zODMgNTAuNzkxLS4yODktLjAyMy00OS4wMTZ6Ii8+PC9zdmc+" alt="Windows 10/11"/><br>
     <code>Ctrl</code> + <code>j</code> (tecla de crase)
   </li> <br>
   <li>
@@ -122,7 +122,7 @@ O código-fonte fica em três pastas: cabeçalhos em [`src/h/`](src/h), implemen
 > O executável procura a pasta [`samples/`](samples) a partir do diretório onde você **executa** o programa (a raiz do projeto), não de onde está o binário.
 
 <h3>
-<img src="https://img.shields.io/badge/Windows%2010%2F11-2563EB?style=flat&logo=windows&logoColor=00ADEF" alt="Windows 10/11"/>
+<img src="https://img.shields.io/badge/windows%2010%2F11-2563EB?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cGF0aCBmaWxsPSIjMDBBREVGIiBkPSJNMTI2IDEuNjM3bC02NyA5LjgzNHY0OS44MzFsNjctLjUzNHpNMS42NDcgNjYuNzA5bC4wMDMgNDIuNDA0IDUwLjc5MSA2Ljk4My0uMDQtNDkuMDU3em01Ni44Mi42OGwuMDk0IDQ5LjQ2NSA2Ny4zNzYgOS41MDkuMDE2LTU4Ljg2M3pNMS42MSAxOS4yOTdsLjA0NyA0Mi4zODMgNTAuNzkxLS4yODktLjAyMy00OS4wMTZ6Ii8+PC9zdmc+" alt="Windows 10/11"/>
 </h3>
 
 **MinGW / MSYS2:**
@@ -268,7 +268,7 @@ mesa-dj🎧🎹/
 ├── CMakeLists.txt <img src="https://img.shields.io/badge/-CMake-111827?style=flat-square&logo=cmake&logoColor=064F8C" height="18">
 ├── README.md <img src="https://img.shields.io/badge/-Markdown-111827?style=flat-square&logo=markdown&logoColor=white" height="18"/>
 ├── LICENSE <img src="https://img.shields.io/badge/License-MIT-orange?style=flat-square" height="18"/>
-├── mesa-dj.exe <img src="https://img.shields.io/badge/Windows%2010%2F11-2563EB?style=flat&logo=windows&logoColor=00ADEF" alt="Windows 10/11"/>
+├── mesa-dj.exe <img src="https://img.shields.io/badge/windows%2010%2F11-2563EB?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cGF0aCBmaWxsPSIjMDBBREVGIiBkPSJNMTI2IDEuNjM3bC02NyA5LjgzNHY0OS44MzFsNjctLjUzNHpNMS42NDcgNjYuNzA5bC4wMDMgNDIuNDA0IDUwLjc5MSA2Ljk4My0uMDQtNDkuMDU3em01Ni44Mi42OGwuMDk0IDQ5LjQ2NSA2Ny4zNzYgOS41MDkuMDE2LTU4Ljg2M3pNMS42MSAxOS4yOTdsLjA0NyA0Mi4zODMgNTAuNzkxLS4yODktLjAyMy00OS4wMTZ6Ii8+PC9zdmc+" alt="Windows 10/11" height="18"/>
 ├── mesa-dj-mac <img src="https://img.shields.io/badge/-macOS%20binário-white?style=flat-square&logo=apple&logoColor=black" height="18"/>
 ├── mesa-dj.command <img src="https://img.shields.io/badge/-macOS%20launcher-white?style=flat-square&logo=apple&logoColor=black" height="18"/>
 |
@@ -283,7 +283,7 @@ mesa-dj🎧🎹/
 └── src <img src="https://img.shields.io/badge/-<>src-111827?style=flat-square&logo=visualstudiocode&logoColor=007ACC" height="18"/>/
     ├── main <img src="https://img.shields.io/badge/-Entry%20Point-111827?style=flat-square&logo=cplusplus&logoColor=FF0000" height="18">/
     │   └── main.cpp <img src="https://img.shields.io/badge/-Entry%20Point-111827?style=flat-square&logo=cplusplus&logoColor=FF0000" height="18"/>
-    ├── cpp <img src="https://img.shields.io/badge/-Implementação-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18">/
+    ├── c++ <img src="https://img.shields.io/badge/-Implementação-111827?style=flat-square&logo=cplusplus&logoColor=pink" height="18">/
     │   ├── Instrumento.cpp <img src="https://img.shields.io/badge/-Source-111827?style=flat-square&logo=cplusplus&logoColor=4CAF50" height="18"/>
     │   ├── MesaDeDJ.cpp <img src="https://img.shields.io/badge/-Source-111827?style=flat-square&logo=cplusplus&logoColor=4CAF50" height="18"/>
     │   ├── AudioEngine.cpp <img src="https://img.shields.io/badge/-Source-111827?style=flat-square&logo=cplusplus&logoColor=4CAF50" height="18"/>

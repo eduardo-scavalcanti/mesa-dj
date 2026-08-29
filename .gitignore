@@ -5,7 +5,7 @@ mesa-dj-mac
 # Diretorio de build do CMake
 build/
 
-# Artefatos comuns de objeto/depuracao
+# Artefatos comuns de objeto/depuração
 *.o
 *.obj
 *.dSYM/

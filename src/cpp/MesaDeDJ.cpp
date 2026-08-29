@@ -23,6 +23,7 @@ bool MesaDeDJ::adicionar(const std::string& nome, const std::string& arquivo,
         std::lock_guard<std::mutex> lg(faixasMtx_);
         auto it = std::find_if(faixas_.begin(), faixas_.end(),
                                [&](const auto& f) { return f->nome() == nome; });
+                    
         if (it != faixas_.end())
         {
             erro = "ja existe uma faixa chamada '" + nome + "'";
@@ -34,6 +35,7 @@ bool MesaDeDJ::adicionar(const std::string& nome, const std::string& arquivo,
 
     // Carregar o .wav pode demorar alguns ms: fazemos isso FORA do lock,
     // enquanto o resto da mesa continua tocando normalmente.
+
     if (!novo->carregarAmostra() && audio_.pronto())
     {
         erro = "nao consegui carregar o arquivo '" + arquivo + "'";
@@ -56,8 +58,13 @@ bool MesaDeDJ::remover(const std::string& nome)
         std::lock_guard<std::mutex> lg(faixasMtx_);
         auto it = std::find_if(faixas_.begin(), faixas_.end(),
                                [&](const auto& f) { return f->nome() == nome; });
-        if (it == faixas_.end()) return false;
-        alvo = *it;              // segura o objeto vivo pelo shared_ptr
+
+        if (it == faixas_.end()) 
+        {
+            return false;
+        }
+
+        alvo = *it; // segura o objeto vivo pelo shared_ptr
         faixas_.erase(it);
     }
     // encerrar() faz join na thread. Fazemos isso com o faixasMtx_ JA LIBERADO,
@@ -70,14 +77,15 @@ std::shared_ptr<Instrumento> MesaDeDJ::buscar(const std::string& nome) const
 {
     std::lock_guard<std::mutex> lg(faixasMtx_);
     auto it = std::find_if(faixas_.begin(), faixas_.end(),
-                           [&](const auto& f) { return f->nome() == nome; });
+    [&](const auto& f) { return f->nome() == nome; });
+
     return it == faixas_.end() ? nullptr : *it;
 }
 
 std::vector<std::shared_ptr<Instrumento>> MesaDeDJ::todas() const
 {
     std::lock_guard<std::mutex> lg(faixasMtx_);
-    return faixas_;   // copia dos ponteiros: quem chama trabalha sem o lock
+    return faixas_; // copia dos ponteiros: quem chama trabalha sem o lock
 }
 
 void MesaDeDJ::tocarTodas()
@@ -97,6 +105,7 @@ void MesaDeDJ::encerrarTudo()
         std::lock_guard<std::mutex> lg(faixasMtx_);
         copia.swap(faixas_);
     }
+
     for (auto& f : copia) f->encerrar();
 }
 
@@ -106,7 +115,12 @@ void MesaDeDJ::iniciarPainel()
 {
     {
         std::lock_guard<std::mutex> lg(painelMtx_);
-        if (painelLigado_) return;
+
+        if (painelLigado_) 
+        {
+            return;
+        }
+
         painelParar_  = false;
         painelLigado_ = true;
     }
@@ -117,11 +131,19 @@ void MesaDeDJ::pararPainel()
 {
     {
         std::lock_guard<std::mutex> lg(painelMtx_);
-        if (!painelLigado_) return;
+        if (!painelLigado_) 
+        {
+            return;
+        }
+
         painelParar_ = true;
     }
     painelCv_.notify_all();
-    if (painel_.joinable()) painel_.join();
+
+    if (painel_.joinable())
+    {
+        painel_.join();
+    }
 
     std::lock_guard<std::mutex> lg(painelMtx_);
     painelLigado_ = false;
@@ -143,7 +165,11 @@ void MesaDeDJ::loopPainel()
         // Espera 2 segundos, mas acorda na hora se mandarem parar.
         painelCv_.wait_for(lock, std::chrono::seconds(2),
                            [this] { return painelParar_; });
-        if (painelParar_) return;
+
+        if (painelParar_) 
+        {
+            return;
+        }
     }
 }
 
@@ -172,6 +198,7 @@ void MesaDeDJ::desenhar() const
         // Barrinha de volume, so pro painel ficar bonito.
         std::string barra;
         int cheios = s.volume / 20;
+
         for (int i = 0; i < 5; ++i) barra += (i < cheios ? '#' : '.');
 
         out << "| " << std::left  << std::setw(12) << s.nome.substr(0, 12)
