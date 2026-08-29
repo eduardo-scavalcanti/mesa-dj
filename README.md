@@ -10,7 +10,7 @@
 </h1>
 
 <h2 align="center">👥👨🏻‍🏫 Docente Responsável: <br>
-<img src="https://img.shields.io/badge/-Docente-111827?style=flat-square&logo=googlescholar&logoColor=4285F4" height="18"/></h2>
+<img src="https://img.shields.io/badge/-Docente-111827?style=flat-square&logo=googlescholar&logoColor=white" height="18"/></h2>
 <ul>
   <li><strong>Raoni Monteiro de Oliveira</strong> <a href="https://www.linkedin.com/in/raonimonteirodeoliveira/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg" width="14"/></a></li>
 </ul>
@@ -28,7 +28,7 @@
 </ul>
 
 <h2 align="center"> ⛏️💻 Tecnologias Utilizadas: <br>
-<img src="https://img.shields.io/badge/-Tech%20Stack-111827?style=flat-square&logo=stackshare&logoColor=0690FA" height="18"/></h2>
+<img src="https://img.shields.io/badge/-Tech%20Stack-111827?style=flat-square&logo=stackshare&logoColor=white" height="18"/></h2>
 <p align="center">
   <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" width="32" height="32" alt="VS Code"/> <br>
   <img src="https://img.shields.io/badge/-C%2B%2B-020617?style=flat-square&logo=cplusplus&logoColor=00599C"/>
@@ -41,7 +41,9 @@
   <img src="https://img.shields.io/badge/-WAV-020617?style=flat-square&logo=files&logoColor=A85D00"/> <br> 
   <img src="https://img.shields.io/badge/-Git-020617?style=flat-square&logo=git&logoColor=F05032"/>
   <img src="https://img.shields.io/badge/-GitHub-020617?style=flat-square&logo=github&logoColor=white"/>
-    <img src="https://img.shields.io/badge/-GitHub_Desktop-020617?style=flat-square&logo=github&logoColor=purple"/>
+    <img src="https://img.shields.io/badge/-GitHub_Desktop-020617?style=flat-square&logo=github&logoColor=purple"/> <br>
+  <img src="https://img.shields.io/badge/-mesa--dj--mac%20(bin%C3%A1rio)-020617?style=flat-square&logo=apple&logoColor=white"/>
+  <img src="https://img.shields.io/badge/-mesa--dj.command%20(launcher)-020617?style=flat-square&logo=apple&logoColor=white"/>
 </p>
 
 <h2 align="center">🖥️ Plataformas Disponíveis: <br>
@@ -64,9 +66,10 @@
 * **Motor de áudio isolado:** a biblioteca miniaudio (single-header, third-party) fica encapsulada em `AudioEngine`, para que o resto do código não dependa dela diretamente.
 * **Build multiplataforma:** compila com g++/MinGW, MSVC ou CMake em Windows, Linux e macOS sem alterações no código-fonte.
 
-## 🚀 Como Executar o Projeto:
+<h2 align="center">🚀 Como Executar o Projeto: <br>
+<img src="https://img.shields.io/badge/-Run-111827?style=flat-square&logo=gnubash&logoColor=white" height="18"/></h2>
 
-### Pré-requisitos
+### Pré-requisitos:
 
 * **Compilador C++17** <img src="https://img.shields.io/badge/GCC%20%2F%20Clang%20%2F%20MSVC-111827?style=flat-square&logo=gnu&logoColor=red"/> <img src="https://img.shields.io/badge/Padrão-C%2B%2B17-orange?style=flat-square"/>
 * **Git (Versionamento)** <img src="https://img.shields.io/badge/Git-111827?style=flat-square&logo=git&logoColor=F05032"/> <img src="https://img.shields.io/badge/Versão-2.0+-orange?style=flat-square"/>
@@ -290,7 +293,7 @@ mesa-dj🎧🎹/
         ├── MesaDeDJ.h <img src="https://img.shields.io/badge/-Header-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18"/>
         ├── AudioEngine.h <img src="https://img.shields.io/badge/-Header-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18"/>
         ├── Console.h <img src="https://img.shields.io/badge/-Header-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18"/>
-        └── miniaudio.h <img src="https://img.shields.io/badge/-Third--party-111827?style=flat-square&logo=audiomack&logoColor=FF6600" height="18"/>
+        └── miniaudio.h <img src="https://img.shields.io/badge/-Third--party_(Documentação em Inglês)-111827?style=flat-square&logo=audiomack&logoColor=FF6600" height="18"/>
 </pre>
 
 Separar em módulos não é enfeite: o `Instrumento` não sabe o que é `std::cout`, e a `MesaDeDJ` não sabe o que é miniaudio. Dá para trocar o motor de áudio mexendo em um arquivo só. Os `.h` ficam em `src/h/`, os `.cpp` em `src/cpp/` e o ponto de entrada (`main.cpp`) em `src/main/`; o compilador encontra os cabeçalhos via `-Isrc/h` (ou, no CMake, via `target_include_directories`).

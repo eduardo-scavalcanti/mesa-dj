@@ -25,7 +25,8 @@
 // Nunca o contrario. Na pratica: pegamos os shared_ptr sob faixasMtx_,
 // soltamos o lock, e so entao chamamos metodos do Instrumento.
 // ---------------------------------------------------------------------------
-class MesaDeDJ {
+class MesaDeDJ
+{
 public:
     explicit MesaDeDJ(AudioEngine& audio);
     ~MesaDeDJ();
@@ -64,7 +65,7 @@ private:
     std::thread             painel_;
     mutable std::mutex      painelMtx_;
     std::condition_variable painelCv_;
-    bool                    painelParar_ = false;
+    bool                    painelParar_  = false;
     bool                    painelLigado_ = false;
 };
 
