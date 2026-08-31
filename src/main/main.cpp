@@ -79,6 +79,7 @@ int main()
     for (const auto& i : iniciais)
     {
         std::string erro;
+
         if (!mesa.adicionar(i.nome, i.arquivo, i.bpm, erro)) 
         {
             imprimir(std::string("[aviso] ") + i.nome + ": " + erro);
@@ -90,6 +91,7 @@ int main()
 
     // ---- loop de comandos (thread principal) ----
     std::string linha;
+
     while (std::getline(std::cin, linha))
     {
         std::istringstream in(linha);
@@ -175,14 +177,26 @@ int main()
                 continue;
             }
 
-            if      (cmd == "play")  faixa->tocar();
+            if (cmd == "play")  
+            {
+                faixa->tocar();
+            }
 
-            else if (cmd == "pause") faixa->pausar();
+            else if (cmd == "pause") 
+            {
+                faixa->pausar();
+            }
 
             else if (cmd == "stop")
             {
-                if (mesa.remover(arg1)) imprimir("[ok] '" + arg1 + "' encerrada");
-                else                    imprimir("[erro] faixa nao encontrada");
+                if (mesa.remover(arg1)) 
+                {
+                    imprimir("[ok] '" + arg1 + "' encerrada");
+                }
+                else                    
+                {
+                    imprimir("[erro] faixa não encontrada");
+                }
             }
 
             else if (cmd == "bpm")
@@ -222,7 +236,7 @@ int main()
     {
         std::lock_guard<std::mutex> lg(Console::mutexTela());
         Console::limpar();
-        std::cout << "Todas as threads encerradas com seguranca. Até a próxima!\n";
+        std::cout << "Todas as threads foram encerradas com seguranca.\n Até a próxima!\n";
     }
     return 0;
 }
