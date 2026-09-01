@@ -227,17 +227,58 @@ sair
 
 ### 📚 Glossário rápido:
 
-| Termo 🔐 | O que significa 🔑 |
-| --- | --- |
-| **Thread** (linha de execução) | Um "fluxo" de instruções que roda dentro do programa. Um processo pode ter várias threads rodando ao mesmo tempo, todas compartilhando a mesma memória |
-| **Concorrência** | Várias tarefas avançando em períodos que se sobrepõem — na Mesa de DJ, cada faixa (bateria, synth, guitarra...) é uma tarefa tocando "ao mesmo tempo" |
-| **Seção crítica** | Trecho de código que mexe em dado compartilhado (uma variável, uma lista) e por isso só pode ser executado por uma thread por vez |
-| **Race condition** (condição de corrida) | Bug que aparece quando duas ou mais threads leem/escrevem o mesmo dado sem coordenação — o resultado passa a depender da ordem de execução, que varia a cada execução. É o tipo de erro que "funciona no teste" e falha na hora da demo |
-| **Mutex** (*mutual exclusion*) | Uma trava: só uma thread por vez consegue "segurá-la" (`lock`) e entrar na seção crítica; as demais esperam até ela ser liberada (`unlock`) |
-| **Deadlock** | Duas (ou mais) threads travadas para sempre, cada uma esperando um recurso que a outra está segurando. Nenhuma das duas solta o que tem, então nenhuma consegue continuar |
-| **Busy-wait** (espera ocupada) | Uma thread fica num loop checando repetidamente "já pode?" em vez de realmente dormir — desperdiça CPU e esquenta a máquina à toa |
-| **Condition variable** | Mecanismo que permite a uma thread dormir (sem gastar CPU) até que outra thread a avise explicitamente de que algo mudou |
-| **RAII** (*Resource Acquisition Is Initialization*) | Idioma do C++ em que o ciclo de vida de um recurso (trava, thread, memória) é amarrado ao ciclo de vida de um objeto: o destrutor libera o recurso automaticamente, mesmo se o programa sair por uma exceção |
+| Termo 🔐 | O que significa 🔑 | Nível terminal/CLI — o que o DJ vê🎧 | Nível código — onde acontece 💻 |
+| --- | --- | --- | --- |
+| **Thread** (linha de execução) | Um "fluxo" de instruções que roda dentro do programa. Um processo pode ter várias threads rodando ao mesmo tempo, todas compartilhando a mesma memória | Ao ligar o `mesa-dj`, 4 faixas já sobem tocando sozinhas (bateria, hihat, baixo, synth); `add <nome> <arq.wav>` cria mais uma "ao vivo", sem travar o terminal | `Instrumento::iniciar()` cria a `std::thread` em [Instrumento.cpp:49](src/cpp/Instrumento.cpp#L49); chamada pelas faixas iniciais em [main.cpp:85](src/main/main.cpp#L85) e por `MesaDeDJ::adicionar()` em [MesaDeDJ.cpp:45](src/cpp/MesaDeDJ.cpp#L45) |
+| **Concorrência** | Várias tarefas avançando em períodos que se sobrepõem — na Mesa de DJ, cada faixa (bateria, synth, guitarra...) é uma tarefa tocando "ao mesmo tempo" | Você ouve bateria + hihat + baixo + synth tocando ao mesmo tempo, cada um no seu próprio BPM | Cada [`Instrumento::loop()`](src/cpp/Instrumento.cpp#L139-L200) roda em thread separada e chama `amostra_.disparar()` em [Instrumento.cpp:181](src/cpp/Instrumento.cpp#L181) de forma independente das demais |
+| **Seção crítica** | Trecho de código que mexe em dado compartilhado (uma variável, uma lista) e por isso só pode ser executado por uma thread por vez | `stop bateria` encerra só a bateria — hihat, baixo e synth continuam tocando sem hesitar | Bloco protegido por `mtx_` em `loop()`: "seção crítica 1" em [Instrumento.cpp:147-171](src/cpp/Instrumento.cpp#L147-L171) e "seção crítica 2" em [Instrumento.cpp:184-199](src/cpp/Instrumento.cpp#L184-L199); cada instrumento tem seu próprio `mtx_`, declarado em [Instrumento.h:75](src/h/Instrumento.h#L75) |
+| **Race condition** (condição de corrida) | Bug que aparece quando duas ou mais threads leem/escrevem o mesmo dado sem coordenação — o resultado passa a depender da ordem de execução, que varia a cada execução. É o tipo de erro que "funciona no teste" e falha na hora da demo | Sem essa proteção, digitar `vol synth 80` enquanto o synth toca poderia (em teoria) fazer o volume "piscar" pra um valor errado ou nunca ser aplicado | `definirVolume()` escreve `volume_`/`volumeSujo_` sob `mtx_` em [Instrumento.cpp:113-121](src/cpp/Instrumento.cpp#L113-L121); `loop()` lê o mesmo `volume_` sob o mesmo `mtx_` em [Instrumento.cpp:163-167](src/cpp/Instrumento.cpp#L163-L167) — é essa dupla proteção que evita a corrida |
+| **Mutex** (*mutual exclusion*) | Uma trava: só uma thread por vez consegue "segurá-la" (`lock`) e entrar na seção crítica; as demais esperam até ela ser liberada (`unlock`) | Aumentar/diminuir volume (`vol`), adicionar (`add`) ou apagar (`stop`) uma faixa nunca "engasga" ou corrompe as outras que já estão tocando | `mtx_` por instrumento ([Instrumento.h:75](src/h/Instrumento.h#L75)); `faixasMtx_` da mesa protegendo a lista em `adicionar()`/`remover()` ([MesaDeDJ.cpp:23](src/cpp/MesaDeDJ.cpp#L23) e [MesaDeDJ.cpp:58](src/cpp/MesaDeDJ.cpp#L58)); `Console::mutexTela()` para a escrita no terminal ([Console.cpp:15-21](src/cpp/Console.cpp#L15-L21)) |
+| **Deadlock** | Duas (ou mais) threads travadas para sempre, cada uma esperando um recurso que a outra está segurando. Nenhuma das duas solta o que tem, então nenhuma consegue continuar | Os momentos de risco são exatamente ligar uma faixa nova e digitar `sair` | Em `Instrumento::encerrar()`, `notify_all()` ([Instrumento.cpp:92](src/cpp/Instrumento.cpp#L92)) e `thread_.join()` ([Instrumento.cpp:100](src/cpp/Instrumento.cpp#L100)) rodam FORA do lock — o comentário em [Instrumento.cpp:94-96](src/cpp/Instrumento.cpp#L94-L96) explica que travar o `join()` dentro do `mtx_` prenderia a própria thread pra sempre. Mesma lógica em `MesaDeDJ::remover()`, que solta `faixasMtx_` antes de chamar `alvo->encerrar()` em [MesaDeDJ.cpp:70-72](src/cpp/MesaDeDJ.cpp#L70-L72) |
+| **Busy-wait** (espera ocupada) | Uma thread fica num loop checando repetidamente "já pode?" em vez de realmente dormir — desperdiça CPU e esquenta a máquina à toa | Uma faixa pausada (`pause bateria`) não consome CPU à toa — só volta a tocar quando você digita `play bateria` | `cv_.wait(lock, predicado)` em [Instrumento.cpp:153-156](src/cpp/Instrumento.cpp#L153-L156) bloqueia a thread de verdade; ela só acorda quando `tocar()` chama `notify_all()` em [Instrumento.cpp:66](src/cpp/Instrumento.cpp#L66) |
+| **Condition variable** | Mecanismo que permite a uma thread dormir (sem gastar CPU) até que outra thread a avise explicitamente de que algo mudou | `play`, `pause`, `bpm`, `vol` e `stop` "acordam" a faixa correspondente na hora, mesmo que ela esteja no meio de uma espera | `cv_` declarada em [Instrumento.h:76](src/h/Instrumento.h#L76); `notify_all()` chamado em `tocar()` ([Instrumento.cpp:66](src/cpp/Instrumento.cpp#L66)), `pausar()` ([Instrumento.cpp:82](src/cpp/Instrumento.cpp#L82)), `definirBpm()` ([Instrumento.cpp:110](src/cpp/Instrumento.cpp#L110)), `definirVolume()` ([Instrumento.cpp:120](src/cpp/Instrumento.cpp#L120)) e `encerrar()` ([Instrumento.cpp:92](src/cpp/Instrumento.cpp#L92)); o painel usa o mesmo padrão com `painelCv_` em [MesaDeDJ.cpp:166-167](src/cpp/MesaDeDJ.cpp#L166-L167) |
+| **RAII** (*Resource Acquisition Is Initialization*) | Idioma do C++ em que o ciclo de vida de um recurso (trava, thread, memória) é amarrado ao ciclo de vida de um objeto: o destrutor libera o recurso automaticamente, mesmo se o programa sair por uma exceção | Se o programa travar ou fechar de forma inesperada, nenhuma faixa "fica tocando fantasma" em segundo plano | Destrutor `~Instrumento()` chama `encerrar()` automaticamente em [Instrumento.cpp:29-32](src/cpp/Instrumento.cpp#L29-L32); `lock_guard`/`unique_lock` (ex.: [Instrumento.cpp:41](src/cpp/Instrumento.cpp#L41) e [Instrumento.cpp:148](src/cpp/Instrumento.cpp#L148)) liberam `mtx_` ao sair de escopo, mesmo em caminhos de erro |
+
+### 🧵 O que é uma thread
+
+<table align="center" width="850">
+<tr>
+<td width="50%" align="center"><img src="./img/thread_definicao.png" width="400" alt="Thread: fluxo de execução independente"></td>
+<td width="50%" align="center"><img src="./img/thread_processo_multiplas_threads.png" width="400" alt="Um processo pode conter uma ou mais threads"></td>
+</tr>
+</table>
+
+Uma **thread** é um **fluxo de execução independente** dentro de um processo — é literalmente a unidade que o diagrama chama de *user threads* na figura, cada "fio" tocando código sozinho. Um único **processo** (no nosso caso, o executável `mesa-dj` rodando) pode conter **uma ou mais threads**, todas compartilhando o mesmo espaço de memória (o `code, data memory` do diagrama) mas cada uma com sua própria pilha de execução. É exatamente esse compartilhamento que faz o `std::vector<shared_ptr<Instrumento>>` da `MesaDeDJ` ser visível e acessível por todas as threads dos instrumentos ao mesmo tempo — e é também por isso que precisamos de mutexes (ver [conceito 5️⃣](#5️⃣-dois-níveis-de-exclusão-mútua)): sem eles, threads da mesma "casa" (processo) mexendo na mesma memória compartilhada é receita de *race condition*.
+
+Na Mesa de DJ, o processo `mesa-dj` roda **N+2 threads** o tempo todo: uma para cada `Instrumento` ativo (`loop()`), mais a thread do painel automático, mais a thread principal que lê os comandos do console.
+
+<table align="center" width="850">
+<tr>
+<td width="50%" align="center"><img src="./img/thread_tls.png" width="400" alt="Thread Local Storage: registradores e pilha"></td>
+<td width="50%" align="center"><img src="./img/thread_kernel_threads.png" width="400" alt="Kernel threads"></td>
+</tr>
+</table>
+
+Cada thread carrega consigo um contextozinho só dela, o **Thread Local Storage (TLS)**: os **registradores do processador** (onde ela está executando agora) e uma **área de pilha em memória** própria, para variáveis locais e chamadas de função. É por causa do TLS que cada `Instrumento::loop()` mantém seu próprio contador de batidas e suas variáveis locais sem pisar nas de outra faixa — só o que é membro da classe (`estado_`, `bpm_`, `volume_`) é compartilhado (e por isso protegido por `mtx_`); o resto vive na pilha privada daquela thread.
+
+As `std::thread` que usamos em C++ são, por baixo dos panos, mapeadas para **threads de núcleo** (*kernel threads*) — o SO enxerga e escalona cada `std::thread` como uma entidade própria, é por isso que instrumentos tocando em threads diferentes de fato avançam em paralelo em máquinas com múltiplos núcleos, e não apenas dão a impressão de simultaneidade.
+
+### 🔄 Estados de uma thread (e como isso aparece na Mesa de DJ)
+
+<p align="center"><img src="./img/estados_processo.png" width="700" alt="Diagrama de estados de processo/thread: new, ready, running, waiting, terminated"></p>
+
+O diagrama acima é o clássico modelo de **estados de processo/thread** de Sistemas Operacionais: toda thread nasce em **new**, entra na fila de **ready** (pronta, esperando o escalonador do SO liberar um núcleo), passa a **running** quando de fato executa, pode ser tirada de execução e voltar a **ready** (preempção por tempo) ou ser movida a **waiting** quando fica bloqueada esperando algo (I/O, um evento, um sinal), e termina em **terminated**. É exatamente o ciclo de vida de cada `Instrumento` da Mesa de DJ, só que com nomes do domínio do projeto:
+
+| Estado do diagrama | Equivalente na Mesa de DJ | Onde acontece no código |
+| --- | --- | --- |
+| **new** | `std::thread` sendo criada | `Instrumento::iniciar()` cria a thread que roda `loop()` |
+| **ready** | Thread pronta, aguardando o escalonador do SO dar tempo de CPU a ela | Transparente — decisão do sistema operacional, não do nosso código |
+| **running** | Faixa **Tocando** ⏵ — o `loop()` está executando, tocando a amostra | `Estado::Tocando`, dentro do `while` do `loop()` |
+| **waiting** | Faixa **Pausada** ⏸ — a thread está bloqueada, sem gastar CPU | `cv_.wait(...)` em `Instrumento`, acordada só por `notify_all()` (ver [conceito 2️⃣](#2️⃣-pausar-sem-espera-ocupada)) |
+| **I/O or event completion → ready** | Comando `play` chega e acorda a faixa pausada | `notify_all()` devolve a thread de `waiting` para `running` |
+| **terminated** | Faixa encerrada — `stop` ou fim do programa | `encerrar()` sinaliza, `notify_all()` acorda a thread e `join()` espera ela morrer de verdade (ver [conceito 3️⃣](#3️⃣-encerrar-é-diferente-de-pausar) e [7️⃣](#7️⃣-raii-resource-acquisition-is-initialization)) |
+
+A diferença principal para o diagrama genérico: na Mesa de DJ não existe uma volta "manual" de `waiting` para `ready` por *time preemption* — cada `Instrumento` só sai de `waiting` (pausado) quando alguém manda `play`, e o `wait_for()` limitado ao intervalo do BPM (ver [conceito 4️⃣](#4️⃣-o-sleep-é-o-bpm)) é o que faz a thread "dar uma espiada" periodicamente sem nunca virar *busy-wait*.
 
 | # | 💭 Conceito | 🎯 Problema resolvido | 🔧 Mecanismo |
 | :-: | --- | --- | --- |
