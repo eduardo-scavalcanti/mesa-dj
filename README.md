@@ -220,7 +220,7 @@ play synth
 sair
 ```
 
-<h2 align="center">🧵 Os conceitos, na prática (o que explicar na apresentação): <br>
+<h2 align="center">🧵 Os conceitos, na prática: <br>
 <img src="https://img.shields.io/badge/-Concurrency-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18"/></h2>
 
 <p align="center"><b>Sete decisões de design sustentam a concorrência do projeto — cada uma resolve um problema clássico de multithreading em C++.</b></p>

@@ -1,5 +1,4 @@
 #include "Console.h"
-
 #include <iostream>
 
 #ifdef _WIN32
@@ -8,14 +7,11 @@
 #endif
 
 using namespace std;
-
 namespace Console
 {
 
 mutex& mutexTela()
 {
-    // Singleton "Meyers": criado na primeira chamada, thread-safe por padrao
-    // desde o C++11.
     static mutex m;
     return m;
 }
@@ -30,14 +26,13 @@ void habilitarAnsi()
     {
         SetConsoleMode(h, modo | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     }
-    
+
     SetConsoleOutputCP(CP_UTF8);
 #endif
 }
 
 void limpar()
 {
-    // \033[2J limpa a tela, \033[H leva o cursor para a posicao (1,1).
     cout << "\033[2J\033[H";
 }
 

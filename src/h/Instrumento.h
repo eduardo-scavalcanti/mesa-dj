@@ -10,25 +10,17 @@
 
 using namespace std;
 
-enum class Estado { Parado, Tocando, Pausado };
+enum class Estado
+{
+    Parado,
+    Tocando,
+    Pausado
+};
 string paraTexto(Estado e);
 
-// ---------------------------------------------------------------------------
-// Instrumento = 1 faixa = 1 thread.
-//
-// A thread roda um loop: toca a amostra -> dorme o intervalo do BPM -> repete.
-//
-// PONTOS DE SINCRONIZACAO:
-//  * mtx_ protege TODO o estado mutavel (estado_, bpm_, volume_, batidas_).
-//  * cv_ e usada para pausar SEM espera ocupada (busy-wait). A thread fica
-//    realmente bloqueada pelo SO, consumindo 0% de CPU, ate alguem sinalizar.
-//  * encerrar_ e uma flag separada do estado: "pausar" nao mata a thread e
-//    "encerrar" consegue acordar uma thread que esta pausada.
-// ---------------------------------------------------------------------------
 class Instrumento
 {
 public:
-    // Fotografia consistente do estado, tirada de uma vez so sob o lock.
     typedef struct Status
     {
         string        nome;
@@ -43,44 +35,41 @@ public:
     Instrumento(string nome, string arquivo, int bpm, AudioEngine& audio);
     ~Instrumento();
 
-    // Contem mutex e thread: nao pode ser copiado nem movido.
     Instrumento(const Instrumento&)            = delete;
     Instrumento& operator=(const Instrumento&) = delete;
 
-    bool carregarAmostra();   // chame ANTES de iniciar()
-    void iniciar();           // cria a thread e ja comeca tocando
-    void tocar();             // retoma
-    void pausar();            // pausa sem matar a thread
-    void encerrar();          // sinaliza o fim e faz join
+    bool carregarAmostra();
+    void iniciar();
+    void tocar();
+    void pausar();
+    void encerrar();
 
     void definirBpm(int bpm);
-    void definirVolume(int volume);   // 0 a 100
+    void definirVolume(int volume);
 
     Status status() const;
-    const string& nome() const { return nome_; }  // const: seguro sem lock
+    const string& nome() const { return nome_; }
 
     static constexpr int BPM_MIN = 20;
     static constexpr int BPM_MAX = 300;
 
 private:
-    void loop();                    // corpo da thread
-    long intervaloMs() const;       // requer o lock adquirido
+    void loop();
+    long intervaloMs() const;
 
-    const string nome_;        // imutavel apos a construcao
+    const string nome_;
     string       arquivo_;
     AudioEngine& audio_;
-    Amostra      amostra_;     // so a thread do instrumento a dispara
+    Amostra      amostra_;
 
-    // ---- estado compartilhado, sempre sob mtx_ ----
     mutable mutex      mtx_;
     condition_variable cv_;
     Estado                  estado_      = Estado::Parado;
     bool                    encerrar_    = false;
     int                     bpm_;
     int                     volume_      = 80;
-    bool                    volumeSujo_  = true;   // precisa aplicar no audio?
+    bool                    volumeSujo_  = true;
     unsigned long           batidas_     = 0;
-    // ----------------------------------------------
 
     thread thread_;
 };

@@ -1,12 +1,3 @@
-// ---------------------------------------------------------------------------
-//  MESA DE DJ - simulador multithread
-//
-//  Arquitetura de threads:
-//    * 1 thread por instrumento -> toca a amostra em loop (Instrumento)
-//    * 1 thread de painel -> redesenha o status a cada 2s (MesaDeDJ)
-//    * 1 thread principal -> le e interpreta os comandos (este arquivo)
-// ---------------------------------------------------------------------------
-
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -21,7 +12,6 @@ using namespace std;
 namespace
 {
 
-// Toda escrita no console passa pelo mutex compartilhado.
 void imprimir(const string& texto)
 {
     lock_guard<mutex> lg(Console::mutexTela());
@@ -65,11 +55,10 @@ int main()
     Console::habilitarAnsi();
 
     AudioEngine audio;
-    audio.iniciar(); // se falhar, a mesa roda em modo silencioso
+    audio.iniciar();
 
     MesaDeDJ mesa(audio);
 
-    // ---- faixas iniciais ----
     struct { const char* nome; const char* arquivo; int bpm; } iniciais[] =
     {
         {"bateria", "samples/bateria.wav", 100},
@@ -82,7 +71,7 @@ int main()
     {
         string erro;
 
-        if (!mesa.adicionar(i.nome, i.arquivo, i.bpm, erro)) 
+        if (!mesa.adicionar(i.nome, i.arquivo, i.bpm, erro))
         {
             imprimir(string("[aviso] ") + i.nome + ": " + erro);
         }
@@ -91,7 +80,6 @@ int main()
     ajuda();
     mesa.iniciarPainel();
 
-    // ---- loop de comandos (thread principal) ----
     string linha;
 
     while (getline(cin, linha))
@@ -179,23 +167,23 @@ int main()
                 continue;
             }
 
-            if (cmd == "play")  
+            if (cmd == "play")
             {
                 faixa->tocar();
             }
 
-            else if (cmd == "pause") 
+            else if (cmd == "pause")
             {
                 faixa->pausar();
             }
 
             else if (cmd == "stop")
             {
-                if (mesa.remover(arg1)) 
+                if (mesa.remover(arg1))
                 {
                     imprimir("[ok] '" + arg1 + "' encerrada");
                 }
-                else                    
+                else
                 {
                     imprimir("[erro] faixa não encontrada");
                 }
@@ -229,9 +217,6 @@ int main()
         }
     }
 
-    // ---- desligamento ordenado ----
-    // Primeiro o painel para de desenhar, depois cada thread de instrumento
-    // recebe o sinal de encerrar e sofre join. Nada de exit() abrupto.
     mesa.pararPainel();
     mesa.encerrarTudo();
 

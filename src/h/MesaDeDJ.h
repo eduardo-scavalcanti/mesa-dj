@@ -12,21 +12,6 @@
 
 using namespace std;
 
-// ---------------------------------------------------------------------------
-// MesaDeDJ
-// Guarda as faixas e roda a thread do painel ao vivo.
-//
-// SEGUNDO PONTO DE SINCRONIZACAO DO PROJETO:
-// o vector de faixas e lido pela thread do painel a cada 2s enquanto a thread
-// de comandos pode inserir/remover itens ("add guitarra" com a musica rodando).
-// Sem o faixasMtx_, um push_back que realoca o vector invalidaria o iterador
-// do painel -> crash aleatorio, dificil de reproduzir.
-//
-// ORDEM DE TRAVAS (para nunca ter deadlock):
-//   faixasMtx_  ->  Instrumento::mtx_
-// Nunca o contrario. Na pratica: pegamos os shared_ptr sob faixasMtx_,
-// soltamos o lock, e so entao chamamos metodos do Instrumento.
-// ---------------------------------------------------------------------------
 class MesaDeDJ
 {
 public:
@@ -36,7 +21,6 @@ public:
     MesaDeDJ(const MesaDeDJ&) = delete;
     MesaDeDJ& operator=(const MesaDeDJ&) = delete;
 
-    // Cria, carrega o .wav e ja poe a thread para rodar.
     bool adicionar(const string& nome, const string& arquivo,
     int bpm, string& erro);
 
@@ -53,7 +37,6 @@ public:
     void pararPainel();
     bool painelLigado() const;
 
-    // Desenha o painel uma unica vez (usado pelo comando "list").
     void desenhar() const;
 
 private:

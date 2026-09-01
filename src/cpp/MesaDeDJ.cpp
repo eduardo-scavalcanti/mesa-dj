@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include "Console.h"
-
 using namespace std;
 
 MesaDeDJ::MesaDeDJ(AudioEngine& audio) : audio_(audio) {}
@@ -23,22 +22,19 @@ bool MesaDeDJ::adicionar(const string& nome, const string& arquivo,
         lock_guard<mutex> lg(faixasMtx_);
         auto it = find_if(faixas_.begin(), faixas_.end(),
                                [&](const auto& f) { return f->nome() == nome; });
-                    
+
         if (it != faixas_.end())
         {
-            erro = "ja existe uma faixa chamada '" + nome + "'";
+            erro = "já existe uma faixa chamada '" + nome + "'";
             return false;
         }
     }
 
     auto novo = make_shared<Instrumento>(nome, arquivo, bpm, audio_);
 
-    // Carregar o .wav pode demorar alguns ms: fazemos isso FORA do lock,
-    // enquanto o resto da mesa continua tocando normalmente.
-
     if (!novo->carregarAmostra() && audio_.pronto())
     {
-        erro = "nao consegui carregar o arquivo '" + arquivo + "'";
+        erro = "não consegui carregar o arquivo '" + arquivo + "'";
         return false;
     }
 
@@ -57,18 +53,16 @@ bool MesaDeDJ::remover(const string& nome)
     {
         lock_guard<mutex> lg(faixasMtx_);
         auto it = find_if(faixas_.begin(), faixas_.end(),
-                               [&](const auto& f) { return f->nome() == nome; });
+        [&](const auto& f) { return f->nome() == nome; });
 
-        if (it == faixas_.end()) 
+        if (it == faixas_.end())
         {
             return false;
         }
 
-        alvo = *it; // segura o objeto vivo pelo shared_ptr
+        alvo = *it;
         faixas_.erase(it);
     }
-    // encerrar() faz join na thread. Fazemos isso com o faixasMtx_ JA LIBERADO,
-    // senao o painel ficaria travado esperando a faixa morrer.
     alvo->encerrar();
     return true;
 }
@@ -85,7 +79,7 @@ shared_ptr<Instrumento> MesaDeDJ::buscar(const string& nome) const
 vector<shared_ptr<Instrumento>> MesaDeDJ::todas() const
 {
     lock_guard<mutex> lg(faixasMtx_);
-    return faixas_; // copia dos ponteiros: quem chama trabalha sem o lock
+    return faixas_;
 }
 
 void MesaDeDJ::tocarTodas()
@@ -109,8 +103,6 @@ void MesaDeDJ::encerrarTudo()
     for (auto& f : copia) f->encerrar();
 }
 
-// --------------------------- painel ao vivo --------------------------------
-
 void MesaDeDJ::iniciarPainel()
 {
     {
@@ -131,7 +123,7 @@ void MesaDeDJ::pararPainel()
 {
     {
         lock_guard<mutex> lg(painelMtx_);
-        if (!painelLigado_) 
+        if (!painelLigado_)
         {
             return;
         }
@@ -162,11 +154,10 @@ void MesaDeDJ::loopPainel()
         desenhar();
 
         unique_lock<mutex> lock(painelMtx_);
-        // Espera 2 segundos, mas acorda na hora se mandarem parar.
         painelCv_.wait_for(lock, chrono::seconds(2),
                            [this] { return painelParar_; });
 
-        if (painelParar_) 
+        if (painelParar_)
         {
             return;
         }
@@ -175,8 +166,6 @@ void MesaDeDJ::loopPainel()
 
 void MesaDeDJ::desenhar() const
 {
-    // Monta o texto inteiro ANTES de travar o console: assim o lock fica
-    // preso pelo menor tempo possivel.
     auto faixas = todas();
 
     ostringstream out;
@@ -195,7 +184,6 @@ void MesaDeDJ::desenhar() const
     {
         Instrumento::Status s = f->status();
 
-        // Barrinha de volume, so pro painel ficar bonito.
         string barra;
         int cheios = s.volume / 20;
 
