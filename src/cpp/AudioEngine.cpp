@@ -4,6 +4,8 @@
 #include "AudioEngine.h"
 #include <iostream>
 
+using namespace std;
+
 // ----------------------------- AudioEngine ---------------------------------
 
 bool AudioEngine::iniciar() 
@@ -12,9 +14,9 @@ bool AudioEngine::iniciar()
     
     if (ma_engine_init(nullptr, &engine_) != MA_SUCCESS) 
     {
-        std::cerr << "[áudio] Não foi possivel abrir o dispositivo de áudio.\n"
-                  << "[áudio] A mesa vai rodar em modo silencioso (as batidas "
-                     "continuam sendo contadas no painel).\n";
+        cerr << "[áudio] Não foi possivel abrir o dispositivo de áudio.\n"
+             << "[áudio] A mesa vai rodar em modo silencioso (as batidas "
+                "continuam sendo contadas no painel).\n";
         return false;
     }
     
@@ -38,7 +40,7 @@ AudioEngine::~AudioEngine()
 
 // ------------------------------- Amostra -----------------------------------
 
-bool Amostra::carregar(AudioEngine& engine, const std::string& caminho) 
+bool Amostra::carregar(AudioEngine& engine, const string& caminho)
 {
     if (!engine.pronto()) return false;
 

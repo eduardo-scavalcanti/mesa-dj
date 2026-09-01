@@ -10,6 +10,8 @@
 
 #include "Instrumento.h"
 
+using namespace std;
+
 // ---------------------------------------------------------------------------
 // MesaDeDJ
 // Guarda as faixas e roda a thread do painel ao vivo.
@@ -35,13 +37,13 @@ public:
     MesaDeDJ& operator=(const MesaDeDJ&) = delete;
 
     // Cria, carrega o .wav e ja poe a thread para rodar.
-    bool adicionar(const std::string& nome, const std::string& arquivo,
-    int bpm, std::string& erro);
+    bool adicionar(const string& nome, const string& arquivo,
+    int bpm, string& erro);
 
-    bool remover(const std::string& nome);
+    bool remover(const string& nome);
 
-    std::shared_ptr<Instrumento> buscar(const std::string& nome) const;
-    std::vector<std::shared_ptr<Instrumento>> todas() const;
+    shared_ptr<Instrumento> buscar(const string& nome) const;
+    vector<shared_ptr<Instrumento>> todas() const;
 
     void tocarTodas();
     void pausarTodas();
@@ -59,12 +61,12 @@ private:
 
     AudioEngine& audio_;
 
-    mutable std::mutex faixasMtx_;
-    std::vector<std::shared_ptr<Instrumento>> faixas_;
+    mutable mutex faixasMtx_;
+    vector<shared_ptr<Instrumento>> faixas_;
 
-    std::thread             painel_;
-    mutable std::mutex      painelMtx_;
-    std::condition_variable painelCv_;
+    thread             painel_;
+    mutable mutex      painelMtx_;
+    condition_variable painelCv_;
     bool                    painelParar_  = false;
     bool                    painelLigado_ = false;
 };

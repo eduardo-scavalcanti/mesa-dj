@@ -7,14 +7,16 @@
   #include <windows.h>
 #endif
 
+using namespace std;
+
 namespace Console
 {
 
-std::mutex& mutexTela()
+mutex& mutexTela()
 {
     // Singleton "Meyers": criado na primeira chamada, thread-safe por padrao
     // desde o C++11.
-    static std::mutex m;
+    static mutex m;
     return m;
 }
 
@@ -36,7 +38,7 @@ void habilitarAnsi()
 void limpar()
 {
     // \033[2J limpa a tela, \033[H leva o cursor para a posicao (1,1).
-    std::cout << "\033[2J\033[H";
+    cout << "\033[2J\033[H";
 }
 
 } // namespace Console

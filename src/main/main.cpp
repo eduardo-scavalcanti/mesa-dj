@@ -16,14 +16,16 @@
 #include "Console.h"
 #include "MesaDeDJ.h"
 
+using namespace std;
+
 namespace
 {
 
 // Toda escrita no console passa pelo mutex compartilhado.
-void imprimir(const std::string& texto)
+void imprimir(const string& texto)
 {
-    std::lock_guard<std::mutex> lg(Console::mutexTela());
-    std::cout << texto << "\n";
+    lock_guard<mutex> lg(Console::mutexTela());
+    cout << texto << "\n";
 }
 
 void ajuda()
@@ -43,11 +45,11 @@ void ajuda()
         "  sair                     encerra tudo com seguranca\n");
 }
 
-int paraInt(const std::string& s, int padrao)
+int paraInt(const string& s, int padrao)
 {
     try
     {
-        return std::stoi(s);
+        return stoi(s);
     }
 
     catch (...)
@@ -68,7 +70,7 @@ int main()
     MesaDeDJ mesa(audio);
 
     // ---- faixas iniciais ----
-    struct { const char* nome; const char* arquivo; int bpm; } iniciais[] = 
+    struct { const char* nome; const char* arquivo; int bpm; } iniciais[] =
     {
         {"bateria", "samples/bateria.wav", 100},
         {"hihat",   "samples/hihat.wav",   200},
@@ -78,11 +80,11 @@ int main()
 
     for (const auto& i : iniciais)
     {
-        std::string erro;
+        string erro;
 
         if (!mesa.adicionar(i.nome, i.arquivo, i.bpm, erro)) 
         {
-            imprimir(std::string("[aviso] ") + i.nome + ": " + erro);
+            imprimir(string("[aviso] ") + i.nome + ": " + erro);
         }
     }
 
@@ -90,12 +92,12 @@ int main()
     mesa.iniciarPainel();
 
     // ---- loop de comandos (thread principal) ----
-    std::string linha;
+    string linha;
 
-    while (std::getline(std::cin, linha))
+    while (getline(cin, linha))
     {
-        std::istringstream in(linha);
-        std::string cmd, arg1, arg2;
+        istringstream in(linha);
+        string cmd, arg1, arg2;
         in >> cmd >> arg1 >> arg2;
 
         if (cmd.empty()) continue;
@@ -139,11 +141,11 @@ int main()
                 continue;
             }
 
-            std::string bpmTexto;
+            string bpmTexto;
             in >> bpmTexto;
             int bpm = bpmTexto.empty() ? 100 : paraInt(bpmTexto, 100);
 
-            std::string erro;
+            string erro;
 
             if (mesa.adicionar(arg1, arg2, bpm, erro))
                 imprimir("[ok] faixa '" + arg1 + "' entrou na mesa");
@@ -234,9 +236,9 @@ int main()
     mesa.encerrarTudo();
 
     {
-        std::lock_guard<std::mutex> lg(Console::mutexTela());
+        lock_guard<mutex> lg(Console::mutexTela());
         Console::limpar();
-        std::cout << "Todas as threads foram encerradas com seguranca.\n Até a próxima!\n";
+        cout << "Todas as threads foram encerradas com seguranca.\n Até a próxima!\n";
     }
     return 0;
 }

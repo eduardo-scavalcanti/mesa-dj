@@ -3,16 +3,18 @@
 
 #include <mutex>
 
+using namespace std;
+
 // ---------------------------------------------------------------------------
-// O console (std::cout) tambem e um RECURSO COMPARTILHADO.
+// O console (cout) tambem e um RECURSO COMPARTILHADO.
 // Se a thread do painel e a thread de comandos escreverem ao mesmo tempo,
 // o texto sai embaralhado. Por isso toda escrita passa por este mutex.
 // ---------------------------------------------------------------------------
 namespace Console
 {
 
-// Mutex global do console. Use sempre com std::lock_guard.
-std::mutex& mutexTela();
+// Mutex global do console. Use sempre com lock_guard.
+mutex& mutexTela();
 
 // Habilita codigos ANSI no Windows 10+ (no Linux/macOS ja funcionam).
 void habilitarAnsi();

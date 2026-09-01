@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <chrono>
 
-std::string paraTexto(Estado e)
+using namespace std;
+
+string paraTexto(Estado e)
 {
     switch (e)
     {
@@ -18,11 +20,11 @@ std::string paraTexto(Estado e)
     }
 }
 
-Instrumento::Instrumento(std::string nome, std::string arquivo, int bpm, AudioEngine& audio)
+Instrumento::Instrumento(string nome, string arquivo, int bpm, AudioEngine& audio)
     :nome_(std::move(nome)),
     arquivo_(std::move(arquivo)),
     audio_(audio),
-    bpm_(std::clamp(bpm, BPM_MIN, BPM_MAX)) {}
+    bpm_(clamp(bpm, BPM_MIN, BPM_MAX)) {}
 
 Instrumento::~Instrumento()
 {
@@ -36,7 +38,7 @@ bool Instrumento::carregarAmostra()
 
 void Instrumento::iniciar()
 {
-    std::lock_guard<std::mutex> lg(mtx_);
+    lock_guard<mutex> lg(mtx_);
 
     if (thread_.joinable()) 
     {
@@ -44,7 +46,7 @@ void Instrumento::iniciar()
     } // já iniciado
 
     estado_ = Estado::Tocando;
-    thread_ = std::thread(&Instrumento::loop, this);
+    thread_ = thread(&Instrumento::loop, this);
     // A thread nova vai tentar pegar mtx_ e ficar bloqueada ate sairmos
     // deste escopo. Nao ha deadlock: liberamos o lock em seguida.
 }
@@ -52,7 +54,7 @@ void Instrumento::iniciar()
 void Instrumento::tocar()
 {
     {
-        std::lock_guard<std::mutex> lg(mtx_);
+        lock_guard<mutex> lg(mtx_);
 
         if (encerrar_) 
         {
@@ -68,7 +70,7 @@ void Instrumento::tocar()
 void Instrumento::pausar()
 {
     {
-        std::lock_guard<std::mutex> lg(mtx_);
+        lock_guard<mutex> lg(mtx_);
 
         if (encerrar_) 
         {
@@ -83,7 +85,7 @@ void Instrumento::pausar()
 void Instrumento::encerrar()
 {
     {
-        std::lock_guard<std::mutex> lg(mtx_);
+        lock_guard<mutex> lg(mtx_);
         encerrar_ = true;
         estado_   = Estado::Parado;
     }
@@ -102,8 +104,8 @@ void Instrumento::encerrar()
 void Instrumento::definirBpm(int bpm)
 {
     {
-        std::lock_guard<std::mutex> lg(mtx_);
-        bpm_ = std::clamp(bpm, BPM_MIN, BPM_MAX);
+        lock_guard<mutex> lg(mtx_);
+        bpm_ = clamp(bpm, BPM_MIN, BPM_MAX);
     }
     cv_.notify_all();
 }
@@ -111,8 +113,8 @@ void Instrumento::definirBpm(int bpm)
 void Instrumento::definirVolume(int volume)
 {
     {
-        std::lock_guard<std::mutex> lg(mtx_);
-        volume_     = std::clamp(volume, 0, 100);
+        lock_guard<mutex> lg(mtx_);
+        volume_     = clamp(volume, 0, 100);
         volumeSujo_ = true;
     }
     cv_.notify_all();
@@ -120,7 +122,7 @@ void Instrumento::definirVolume(int volume)
 
 Instrumento::Status Instrumento::status() const
 {
-    std::lock_guard<std::mutex> lg(mtx_);
+    lock_guard<mutex> lg(mtx_);
     // Copiamos tudo de uma vez: quem recebe o Status ve um retrato coerente,
     // nunca um "meio caminho" entre duas alteracoes.
     return Status{nome_, arquivo_, estado_, bpm_, volume_, batidas_, amostra_.carregada()};
@@ -143,7 +145,7 @@ void Instrumento::loop()
 
         // ---- Secao critica 1: decidir se toca ----
         {
-            std::unique_lock<std::mutex> lock(mtx_);
+            unique_lock<mutex> lock(mtx_);
 
             // Dorme aqui enquanto estiver pausado. O predicado tambem protege
             // contra "spurious wakeups" (a cv pode acordar sozinha).
@@ -180,12 +182,12 @@ void Instrumento::loop()
 
         // ---- Secao critica 2: dormir o intervalo do BPM ----
         {
-            std::unique_lock<std::mutex> lock(mtx_);
+            unique_lock<mutex> lock(mtx_);
 
             // Em vez de sleep_for (que ficaria "surdo"), usamos wait_for:
             // se o DJ mandar pausar ou sair, acordamos na hora, sem esperar
             // a batida terminar.
-            cv_.wait_for(lock, std::chrono::milliseconds(esperaMs), [this] 
+            cv_.wait_for(lock, chrono::milliseconds(esperaMs), [this]
             {
                 return encerrar_ || estado_ != Estado::Tocando;
             });

@@ -6,6 +6,8 @@
 #include <sstream>
 #include "Console.h"
 
+using namespace std;
+
 MesaDeDJ::MesaDeDJ(AudioEngine& audio) : audio_(audio) {}
 
 MesaDeDJ::~MesaDeDJ()
@@ -14,12 +16,12 @@ MesaDeDJ::~MesaDeDJ()
     encerrarTudo();
 }
 
-bool MesaDeDJ::adicionar(const std::string& nome, const std::string& arquivo,
-                         int bpm, std::string& erro)
+bool MesaDeDJ::adicionar(const string& nome, const string& arquivo,
+                         int bpm, string& erro)
 {
     {
-        std::lock_guard<std::mutex> lg(faixasMtx_);
-        auto it = std::find_if(faixas_.begin(), faixas_.end(),
+        lock_guard<mutex> lg(faixasMtx_);
+        auto it = find_if(faixas_.begin(), faixas_.end(),
                                [&](const auto& f) { return f->nome() == nome; });
                     
         if (it != faixas_.end())
@@ -29,7 +31,7 @@ bool MesaDeDJ::adicionar(const std::string& nome, const std::string& arquivo,
         }
     }
 
-    auto novo = std::make_shared<Instrumento>(nome, arquivo, bpm, audio_);
+    auto novo = make_shared<Instrumento>(nome, arquivo, bpm, audio_);
 
     // Carregar o .wav pode demorar alguns ms: fazemos isso FORA do lock,
     // enquanto o resto da mesa continua tocando normalmente.
@@ -43,18 +45,18 @@ bool MesaDeDJ::adicionar(const std::string& nome, const std::string& arquivo,
     novo->iniciar();
 
     {
-        std::lock_guard<std::mutex> lg(faixasMtx_);
+        lock_guard<mutex> lg(faixasMtx_);
         faixas_.push_back(std::move(novo));
     }
     return true;
 }
 
-bool MesaDeDJ::remover(const std::string& nome)
+bool MesaDeDJ::remover(const string& nome)
 {
-    std::shared_ptr<Instrumento> alvo;
+    shared_ptr<Instrumento> alvo;
     {
-        std::lock_guard<std::mutex> lg(faixasMtx_);
-        auto it = std::find_if(faixas_.begin(), faixas_.end(),
+        lock_guard<mutex> lg(faixasMtx_);
+        auto it = find_if(faixas_.begin(), faixas_.end(),
                                [&](const auto& f) { return f->nome() == nome; });
 
         if (it == faixas_.end()) 
@@ -71,18 +73,18 @@ bool MesaDeDJ::remover(const std::string& nome)
     return true;
 }
 
-std::shared_ptr<Instrumento> MesaDeDJ::buscar(const std::string& nome) const
+shared_ptr<Instrumento> MesaDeDJ::buscar(const string& nome) const
 {
-    std::lock_guard<std::mutex> lg(faixasMtx_);
-    auto it = std::find_if(faixas_.begin(), faixas_.end(),
+    lock_guard<mutex> lg(faixasMtx_);
+    auto it = find_if(faixas_.begin(), faixas_.end(),
     [&](const auto& f) { return f->nome() == nome; });
 
     return it == faixas_.end() ? nullptr : *it;
 }
 
-std::vector<std::shared_ptr<Instrumento>> MesaDeDJ::todas() const
+vector<shared_ptr<Instrumento>> MesaDeDJ::todas() const
 {
-    std::lock_guard<std::mutex> lg(faixasMtx_);
+    lock_guard<mutex> lg(faixasMtx_);
     return faixas_; // copia dos ponteiros: quem chama trabalha sem o lock
 }
 
@@ -98,9 +100,9 @@ void MesaDeDJ::pausarTodas()
 
 void MesaDeDJ::encerrarTudo()
 {
-    std::vector<std::shared_ptr<Instrumento>> copia;
+    vector<shared_ptr<Instrumento>> copia;
     {
-        std::lock_guard<std::mutex> lg(faixasMtx_);
+        lock_guard<mutex> lg(faixasMtx_);
         copia.swap(faixas_);
     }
 
@@ -112,9 +114,9 @@ void MesaDeDJ::encerrarTudo()
 void MesaDeDJ::iniciarPainel()
 {
     {
-        std::lock_guard<std::mutex> lg(painelMtx_);
+        lock_guard<mutex> lg(painelMtx_);
 
-        if (painelLigado_) 
+        if (painelLigado_)
         {
             return;
         }
@@ -122,13 +124,13 @@ void MesaDeDJ::iniciarPainel()
         painelParar_  = false;
         painelLigado_ = true;
     }
-    painel_ = std::thread(&MesaDeDJ::loopPainel, this);
+    painel_ = thread(&MesaDeDJ::loopPainel, this);
 }
 
 void MesaDeDJ::pararPainel()
 {
     {
-        std::lock_guard<std::mutex> lg(painelMtx_);
+        lock_guard<mutex> lg(painelMtx_);
         if (!painelLigado_) 
         {
             return;
@@ -143,13 +145,13 @@ void MesaDeDJ::pararPainel()
         painel_.join();
     }
 
-    std::lock_guard<std::mutex> lg(painelMtx_);
+    lock_guard<mutex> lg(painelMtx_);
     painelLigado_ = false;
 }
 
 bool MesaDeDJ::painelLigado() const
 {
-    std::lock_guard<std::mutex> lg(painelMtx_);
+    lock_guard<mutex> lg(painelMtx_);
     return painelLigado_;
 }
 
@@ -159,9 +161,9 @@ void MesaDeDJ::loopPainel()
     {
         desenhar();
 
-        std::unique_lock<std::mutex> lock(painelMtx_);
+        unique_lock<mutex> lock(painelMtx_);
         // Espera 2 segundos, mas acorda na hora se mandarem parar.
-        painelCv_.wait_for(lock, std::chrono::seconds(2),
+        painelCv_.wait_for(lock, chrono::seconds(2),
                            [this] { return painelParar_; });
 
         if (painelParar_) 
@@ -177,7 +179,7 @@ void MesaDeDJ::desenhar() const
     // preso pelo menor tempo possivel.
     auto faixas = todas();
 
-    std::ostringstream out;
+    ostringstream out;
     out << "+==============================================================+\n"
         << "|                    M E S A   D E   D J  🎧🎤                  |\n"
         << "+--------------+-----------+-------+--------+------------------+\n"
@@ -194,16 +196,16 @@ void MesaDeDJ::desenhar() const
         Instrumento::Status s = f->status();
 
         // Barrinha de volume, so pro painel ficar bonito.
-        std::string barra;
+        string barra;
         int cheios = s.volume / 20;
 
         for (int i = 0; i < 5; ++i) barra += (i < cheios ? '#' : '.');
 
-        out << " | " << std::left  << std::setw(12) << s.nome.substr(0, 12)
-            << " | " << std::setw(9) << paraTexto(s.estado)
-            << " | " << std::right << std::setw(5) << s.bpm
+        out << " | " << left  << setw(12) << s.nome.substr(0, 12)
+            << " | " << setw(9) << paraTexto(s.estado)
+            << " | " << right << setw(5) << s.bpm
             << " | " << barra << " "
-            << " | " << std::setw(16) << s.batidas << " |\n";
+            << " | " << setw(16) << s.batidas << " |\n";
 
         if (!s.comSom)
         {
@@ -217,7 +219,7 @@ void MesaDeDJ::desenhar() const
         << " play all | pause all | list | painel on|off | ajuda | sair\n\n"
         << "DJ> ";
 
-    std::lock_guard<std::mutex> lg(Console::mutexTela());
+    lock_guard<mutex> lg(Console::mutexTela());
     Console::limpar();
-    std::cout << out.str() << std::flush;
+    cout << out.str() << flush;
 }
