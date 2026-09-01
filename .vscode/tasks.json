@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar Mesa de DJ",
+      "type": "shell",
+      "command": "C:/msys64/ucrt64/bin/g++.exe",
+      "args": [
+        "-std=c++17",
+        "-O2",
+        "-Isrc/h",
+        "src/main/main.cpp",
+        "src/cpp/Console.cpp",
+        "src/cpp/AudioEngine.cpp",
+        "src/cpp/Instrumento.cpp",
+        "src/cpp/MesaDeDJ.cpp",
+        "-o",
+        "mesa-dj.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Executar Mesa de DJ",
+      "type": "shell",
+      "command": ".\\mesa-dj.exe",
+      "dependsOn": "Compilar Mesa de DJ",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "focus": true,
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
+

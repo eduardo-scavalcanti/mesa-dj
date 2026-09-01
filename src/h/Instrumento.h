@@ -8,10 +8,8 @@
 
 #include "AudioEngine.h"
 
-using namespace std;
-
 enum class Estado { Parado, Tocando, Pausado };
-string paraTexto(Estado e);
+std::string paraTexto(Estado e);
 
 // ---------------------------------------------------------------------------
 // Instrumento = 1 faixa = 1 thread.
@@ -31,8 +29,8 @@ public:
     // Fotografia consistente do estado, tirada de uma vez so sob o lock.
     typedef struct Status
     {
-        string        nome;
-        string        arquivo;
+        std::string   nome;
+        std::string   arquivo;
         Estado        estado;
         int           bpm;
         int           volume;
@@ -40,7 +38,7 @@ public:
         bool          comSom;
     } Status;
 
-    Instrumento(string nome, string arquivo, int bpm, AudioEngine& audio);
+    Instrumento(std::string nome, std::string arquivo, int bpm, AudioEngine& audio);
     ~Instrumento();
 
     // Contem mutex e thread: nao pode ser copiado nem movido.
@@ -57,7 +55,7 @@ public:
     void definirVolume(int volume);   // 0 a 100
 
     Status status() const;
-    const string& nome() const { return nome_; }  // const: seguro sem lock
+    const std::string& nome() const { return nome_; }  // const: seguro sem lock
 
     static constexpr int BPM_MIN = 20;
     static constexpr int BPM_MAX = 300;
@@ -66,14 +64,14 @@ private:
     void loop();                    // corpo da thread
     long intervaloMs() const;       // requer o lock adquirido
 
-    const string nome_;        // imutavel apos a construcao
-    string       arquivo_;
-    AudioEngine& audio_;
-    Amostra      amostra_;     // so a thread do instrumento a dispara
+    const std::string nome_;        // imutavel apos a construcao
+    std::string       arquivo_;
+    AudioEngine&      audio_;
+    Amostra           amostra_;     // so a thread do instrumento a dispara
 
     // ---- estado compartilhado, sempre sob mtx_ ----
-    mutable mutex      mtx_;
-    condition_variable cv_;
+    mutable std::mutex      mtx_;
+    std::condition_variable cv_;
     Estado                  estado_      = Estado::Parado;
     bool                    encerrar_    = false;
     int                     bpm_;
@@ -82,7 +80,7 @@ private:
     unsigned long           batidas_     = 0;
     // ----------------------------------------------
 
-    thread thread_;
+    std::thread thread_;
 };
 
 #endif // INSTRUMENTO_H

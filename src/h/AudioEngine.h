@@ -3,8 +3,6 @@
 
 #include <string>
 
-using namespace std;
-
 // ---------------------------------------------------------------------------
 // Configuracao da miniaudio: o projeto so precisa dela pra tocar arquivos
 // .wav (ver samples/*.wav) atraves da API de alto nivel (ma_engine/ma_sound).
@@ -84,8 +82,7 @@ class Amostra
 
         Amostra(const Amostra&) = delete;
         Amostra& operator=(const Amostra&) = delete;
-
-        bool carregar(AudioEngine& engine, const string& caminho);
+        bool carregar(AudioEngine& engine, const std::string& caminho);
         void disparar(); // toca do inicio (re-trigger)
         void definirVolume(float v); // 0.0 a 1.0
         bool carregada() const { return carregada_; }
