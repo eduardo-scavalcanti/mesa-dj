@@ -225,7 +225,21 @@ sair
 
 <p align="center"><b>Sete decisões de design sustentam a concorrência do projeto — cada uma resolve um problema clássico de multithreading em C++.</b></p>
 
-| # | Conceito | 🎯 Problema resolvido | 🔧 Mecanismo |
+### 📚 Glossário rápido:
+
+| Termo 🔐 | O que significa 🔑 |
+| --- | --- |
+| **Thread** (linha de execução) | Um "fluxo" de instruções que roda dentro do programa. Um processo pode ter várias threads rodando ao mesmo tempo, todas compartilhando a mesma memória |
+| **Concorrência** | Várias tarefas avançando em períodos que se sobrepõem — na Mesa de DJ, cada faixa (bateria, synth, guitarra...) é uma tarefa tocando "ao mesmo tempo" |
+| **Seção crítica** | Trecho de código que mexe em dado compartilhado (uma variável, uma lista) e por isso só pode ser executado por uma thread por vez |
+| **Race condition** (condição de corrida) | Bug que aparece quando duas ou mais threads leem/escrevem o mesmo dado sem coordenação — o resultado passa a depender da ordem de execução, que varia a cada execução. É o tipo de erro que "funciona no teste" e falha na hora da demo |
+| **Mutex** (*mutual exclusion*) | Uma trava: só uma thread por vez consegue "segurá-la" (`lock`) e entrar na seção crítica; as demais esperam até ela ser liberada (`unlock`) |
+| **Deadlock** | Duas (ou mais) threads travadas para sempre, cada uma esperando um recurso que a outra está segurando. Nenhuma das duas solta o que tem, então nenhuma consegue continuar |
+| **Busy-wait** (espera ocupada) | Uma thread fica num loop checando repetidamente "já pode?" em vez de realmente dormir — desperdiça CPU e esquenta a máquina à toa |
+| **Condition variable** | Mecanismo que permite a uma thread dormir (sem gastar CPU) até que outra thread a avise explicitamente de que algo mudou |
+| **RAII** (*Resource Acquisition Is Initialization*) | Idioma do C++ em que o ciclo de vida de um recurso (trava, thread, memória) é amarrado ao ciclo de vida de um objeto: o destrutor libera o recurso automaticamente, mesmo se o programa sair por uma exceção |
+
+| # | 💭 Conceito | 🎯 Problema resolvido | 🔧 Mecanismo |
 | :-: | --- | --- | --- |
 | 1️⃣ | Uma thread por instrumento | Faixas tocando juntas, sem travar umas às outras | `std::thread` |
 | 2️⃣ | Pausar sem espera ocupada | CPU consumida à toa num `while(true) {}` | `std::condition_variable` |
@@ -235,11 +249,11 @@ sair
 | 6️⃣ | Prevenção de deadlock | Duas threads travadas esperando uma a outra | Ordem fixa de locks |
 | 7️⃣ | RAII | Threads órfãs quando o programa encerra por exceção | Destrutores chamam `encerrar()` |
 
----
-
 ### 1️⃣ Uma thread por instrumento
 
-`Instrumento::iniciar()` cria a `std::thread` que roda `loop()`. Toda faixa repete o mesmo ciclo, independente das outras:
+**O conceito:** um programa "sequencial" comum faz uma coisa de cada vez — se ele precisasse tocar bateria, depois synth, depois guitarra, uma faixa só começaria quando a anterior terminasse. Com **threads**, o mesmo processo cria vários fluxos de execução independentes, e o sistema operacional os intercala (ou os roda literalmente em paralelo, se houver múltiplos núcleos de CPU). É isso que permite várias faixas "tocando juntas" de verdade.
+
+**Na prática:** `Instrumento::iniciar()` cria a `std::thread` que roda `loop()`. Toda faixa repete o mesmo ciclo, independente das outras:
 
 ```
    🔊 toca a amostra  →  💤 dorme 60000/BPM ms  →  🔁 repete
@@ -249,20 +263,26 @@ sair
 
 ### 2️⃣ Pausar sem espera ocupada
 
-| | ❌ Espera ocupada (*busy-wait*) | ✅ `condition_variable` |
+**O conceito:** quando uma thread precisa esperar por um evento (por exemplo, "espera até alguém mandar tocar de novo"), existem duas formas de esperar. A ingênua é o **busy-wait**: ficar em loop perguntando "já?", "já?", "já?" sem parar — a thread nunca solta o processador, então consome ~100% de um núcleo de CPU à toa, mesmo parada. A forma correta é usar uma **condition variable**: a thread avisa ao sistema operacional "me acorde quando algo mudar" e dorme de verdade, sem gastar CPU, até receber um sinal (`notify`) de outra thread.
+
+**Na prática:**
+
+| # | ❌ Espera ocupada (*busy-wait*) | ✅ `condition_variable` |
 | --- | --- | --- |
 | **Código** | `while (pausado) { }` | `cv_.wait(lock, [this]{ return encerrar_ \|\| estado_ == Estado::Tocando; });` |
 | **CPU enquanto pausado** | ~100% de um núcleo, à toa | 0% — thread dorme pelo SO |
 | **Acorda quando?** | Já está acordada, só verificando em loop | Sob demanda, via `notify_all()` |
 | **Risco** | Aquece a máquina, engana o escalonador | *Spurious wakeups* — mitigado pelo predicado (lambda) |
 
-> 🛡️ O predicado passado ao `wait` não é só sintaxe: sem ele, um *spurious wakeup* faria a faixa voltar a tocar sem ninguém ter mandado.
+> 🛡️ O predicado passado ao `wait` não é só sintaxe: sem ele, um *spurious wakeup* (um despertar "falso", sem ninguém ter chamado `notify`, que o padrão do C++ permite acontecer ocasionalmente) faria a faixa voltar a tocar sem ninguém ter mandado.
 
 ### 3️⃣ Encerrar é diferente de pausar
 
-Duas flags, dois papéis — misturá-las trava o programa:
+**O conceito:** é tentador controlar "tocando", "pausado" e "encerrando" com uma única variável, mas são decisões independentes: uma thread pausada está dormindo esperando ser acordada para *tocar*; encerrar é uma ordem completamente diferente — "pare o loop e finalize a thread". Se as duas coisas dependerem do mesmo sinal, uma faixa pausada pode nunca "ouvir" o pedido de encerramento, porque ela só acordaria para voltar a tocar.
 
-| Flag | Controla | Se fosse unificada com a outra... |
+**Na prática:** duas flags, dois papéis — misturá-las trava o programa:
+
+| Flag 🏳️ | Controla 🕹️ | Se fosse unificada com a outra... |
 | --- | --- | --- |
 | `estado_` | Tocando ⏵ / Pausado ⏸ | — |
 | `encerrar_` | Encerrar 🛑 a thread e sair do loop | Uma faixa pausada (dormindo) nunca acordaria para ser encerrada |
@@ -273,18 +293,26 @@ Por isso **todo** `wait` também testa `encerrar_`. Nada de `exit()`, `terminate
 sinalizar a flag  →  notify_all()  →  join()
 ```
 
+`join()` é o comando que faz a thread que pediu o encerramento **esperar** a outra thread realmente terminar, antes de continuar — sem ele, o programa poderia fechar com uma thread ainda rodando (ou pior, acessando memória que já não existe mais).
+
 ### 4️⃣ O sleep é o BPM
 
-Em vez de `std::this_thread::sleep_for` (que ficaria "surdo" durante a espera), o loop usa `cv_.wait_for(...)` com timeout: a espera dura o intervalo do BPM, **mas** um `pause` ou um `sair` acorda a thread na hora, sem esperar a batida terminar.
+**O conceito:** se uma thread precisa esperar um tempo fixo (por exemplo, o intervalo entre batidas), a forma mais simples é `sleep_for` — mas ela é "surda": a thread fica completamente inacessível durante toda a espera, ignorando qualquer pedido de pausar ou encerrar até o tempo acabar. O jeito certo é dormir com um **timeout em cima de uma condition variable**: a thread espera até o intervalo do BPM passar, **mas** continua "ouvindo" sinais o tempo todo, então acorda na hora se alguém mandar pausar ou sair.
+
+**Na prática:** o loop usa `cv_.wait_for(...)` em vez de `std::this_thread::sleep_for`, e a tabela abaixo confirma que o tempo entre batidas continua correto:
 
 | BPM | Duração testada | Batidas esperadas | Batidas obtidas |
 | :-: | :-: | :-: | :-: |
 | 100 | 3 s | 5 | ✅ 5 |
 | 200 | 3 s | 10 | ✅ 10 |
 
-### 5️⃣ Dois níveis de exclusão mútua:
+### 5️⃣ Dois níveis de exclusão mútua
 
-| 🔒 Mutex | Protege | Por quê |
+**O conceito:** exclusão mútua (o "mutex" do glossário) é a técnica de garantir que só uma thread por vez mexa em um dado compartilhado. Mas nem todo dado compartilhado é o mesmo dado: proteger tudo com uma única trava geral funciona, porém faz threads que nem sequer disputam o mesmo recurso ficarem esperando umas pelas outras sem necessidade. A alternativa é ter **uma trava por recurso**, protegendo só o que de fato é acessado por mais de uma thread.
+
+**Na prática:**
+
+| 🔒 Mutex | Protege | Porquê |
 | --- | --- | --- |
 | `Instrumento::mtx_` | Estado de **uma** faixa (estado, BPM, volume, contador) | Cada instrumento é dono só do próprio estado |
 | `MesaDeDJ::faixasMtx_` | O **vector de faixas** | `add` insere itens enquanto a thread do painel percorre a lista — sem o lock, um `push_back` que realoca o vector invalidaria o iterador do painel, e o crash só aparece na hora da apresentação |
@@ -292,12 +320,20 @@ Em vez de `std::this_thread::sleep_for` (que ficaria "surdo" durante a espera), 
 
 ### 6️⃣ Como evitamos deadlock?
 
+**O conceito:** um **deadlock** clássico acontece assim: a thread A trava o recurso 1 e depois tenta travar o recurso 2; ao mesmo tempo, a thread B já travou o recurso 2 e tenta travar o recurso 1. Nenhuma das duas solta o que já tem, então as duas ficam esperando para sempre — o programa simplesmente "congela", sem crashar e sem mensagem de erro. Duas regras evitam esse cenário: (1) sempre travar os recursos **na mesma ordem** em todo o código, para que a situação "A espera o que B tem, e B espera o que A tem" nunca se forme; e (2) nunca segurar uma trava enquanto se faz algo demorado (como esperar outra thread terminar), porque isso aumenta o tempo em que outra thread pode ficar bloqueada esperando essa trava.
+
+**Na prática:**
+
 | Regra | Na prática |
 | --- | --- |
 | 🔢 **Ordem fixa de travas** | `faixasMtx_` → `mtx_` do instrumento, nunca o inverso. Na prática nem chegamos a segurar as duas ao mesmo tempo: copiamos os `shared_ptr` sob `faixasMtx_`, soltamos o lock, e só então chamamos métodos da faixa |
 | ⏳ **Nunca operação longa com lock na mão** | `join()` em `encerrar()`, disparo de áudio no `loop()` e carregamento do `.wav` em `adicionar()` acontecem **fora** da seção crítica — um `join()` com o mutex preso trava para sempre, pois a thread que morre precisa daquele mesmo mutex para terminar |
 
-### 7️⃣ RAII
+### 7️⃣ RAII <i>(*Resource Acquisition Is Initialization*)</i>
+
+**O conceito:** em C++ não existe coletor de lixo automático para recursos como threads — se o time esquecer de liberar um, ele <b>"vaza"</b>: a thread continua rodando (ou melhor, a memória continua alocada) mesmo depois que ninguém mais precisa dela, inclusive se o programa encerrar de forma inesperada por uma exceção. O idioma **RAII** resolve isso amarrando a liberação do recurso ao destrutor do objeto que o representa: quando o objeto sai de escopo — por retorno normal ou por exceção —, o destrutor roda automaticamente e libera tudo, sem depender de o programador se lembrar de chamar um `close()` ou `free()` manualmente.
+
+**Na prática:**
 
 ```
 ~Instrumento()  →  encerrar()
