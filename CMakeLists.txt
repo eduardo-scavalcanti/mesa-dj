@@ -4,7 +4,8 @@ project(MesaDeDJ CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(mesa-dj
+add_executable(
+    mesa-dj
     src/main/main.cpp
     src/cpp/Console.cpp
     src/cpp/AudioEngine.cpp

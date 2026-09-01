@@ -194,7 +194,8 @@ cmake -B build && cmake --build build
 | `cl /std:c++17 /EHsc /O2 /Isrc\h src\main\main.cpp src\cpp\*.cpp` | Compila manualmente com MSVC |
 | `./mesa-dj.command` | Compila (se necessário) e roda no macOS com duplo clique |
 
-## 🎛️ Comandos
+<h2 align="center">🎛️ Comandos: <br>
+<img src="https://img.shields.io/badge/-CLI-111827?style=flat-square&logo=gnubash&logoColor=white" height="18"/></h2>
 
 ```
 play  <faixa>              retoma a faixa
@@ -219,46 +220,91 @@ play synth
 sair
 ```
 
-## 🧵 Os conceitos, na prática (o que explicar na apresentação)
+<h2 align="center">🧵 Os conceitos, na prática (o que explicar na apresentação): <br>
+<img src="https://img.shields.io/badge/-Concurrency-111827?style=flat-square&logo=cplusplus&logoColor=00599C" height="18"/></h2>
 
-### 1. Uma thread por instrumento
-`Instrumento::iniciar()` cria a `std::thread` que roda `loop()`. O loop é sempre o mesmo ciclo: **toca a amostra → dorme `60000/BPM` ms → repete**.
+<p align="center"><b>Sete decisões de design sustentam a concorrência do projeto — cada uma resolve um problema clássico de multithreading em C++.</b></p>
 
-### 2. Pausar sem espera ocupada
-O jeito errado, que quase todo mundo escreve primeiro:
+| # | Conceito | 🎯 Problema resolvido | 🔧 Mecanismo |
+| :-: | --- | --- | --- |
+| 1️⃣ | Uma thread por instrumento | Faixas tocando juntas, sem travar umas às outras | `std::thread` |
+| 2️⃣ | Pausar sem espera ocupada | CPU consumida à toa num `while(true) {}` | `std::condition_variable` |
+| 3️⃣ | Encerrar ≠ pausar | Faixa pausada que nunca mais acorda para ser encerrada | Flags `estado_` / `encerrar_` |
+| 4️⃣ | Sleep guiado pelo BPM | Espera "surda" que ignora comandos de pausa/saída | `cv_.wait_for()` com timeout |
+| 5️⃣ | Dois níveis de mutex | Corrida entre `add` e a thread do painel | `mtx_` + `faixasMtx_` + `mutexTela()` |
+| 6️⃣ | Prevenção de deadlock | Duas threads travadas esperando uma a outra | Ordem fixa de locks |
+| 7️⃣ | RAII | Threads órfãs quando o programa encerra por exceção | Destrutores chamam `encerrar()` |
 
-```cpp
-while (pausado) { }            
-// queima 100% de um núcleo à toa
+---
+
+### 1️⃣ Uma thread por instrumento
+
+`Instrumento::iniciar()` cria a `std::thread` que roda `loop()`. Toda faixa repete o mesmo ciclo, independente das outras:
+
+```
+   🔊 toca a amostra  →  💤 dorme 60000/BPM ms  →  🔁 repete
+        ▲                                              │
+        └──────────────────────────────────────────────┘
 ```
 
-O jeito certo usa `std::condition_variable`:
+### 2️⃣ Pausar sem espera ocupada
 
-```cpp
-cv_.wait(lock, [this]{ return encerrar_ || estado_ == Estado::Tocando; });
+| | ❌ Espera ocupada (*busy-wait*) | ✅ `condition_variable` |
+| --- | --- | --- |
+| **Código** | `while (pausado) { }` | `cv_.wait(lock, [this]{ return encerrar_ \|\| estado_ == Estado::Tocando; });` |
+| **CPU enquanto pausado** | ~100% de um núcleo, à toa | 0% — thread dorme pelo SO |
+| **Acorda quando?** | Já está acordada, só verificando em loop | Sob demanda, via `notify_all()` |
+| **Risco** | Aquece a máquina, engana o escalonador | *Spurious wakeups* — mitigado pelo predicado (lambda) |
+
+> 🛡️ O predicado passado ao `wait` não é só sintaxe: sem ele, um *spurious wakeup* faria a faixa voltar a tocar sem ninguém ter mandado.
+
+### 3️⃣ Encerrar é diferente de pausar
+
+Duas flags, dois papéis — misturá-las trava o programa:
+
+| Flag | Controla | Se fosse unificada com a outra... |
+| --- | --- | --- |
+| `estado_` | Tocando ⏵ / Pausado ⏸ | — |
+| `encerrar_` | Encerrar 🛑 a thread e sair do loop | Uma faixa pausada (dormindo) nunca acordaria para ser encerrada |
+
+Por isso **todo** `wait` também testa `encerrar_`. Nada de `exit()`, `terminate()` ou matar thread na força bruta — o fluxo correto é sempre:
+
+```
+sinalizar a flag  →  notify_all()  →  join()
 ```
 
-A thread fica **bloqueada pelo sistema operacional**, com 0% de CPU, até que alguém chame `notify_all()`. O predicado (a lambda) também protege contra *spurious wakeups* — condition variables podem acordar sozinhas, e sem o predicado a faixa voltaria a tocar sem ninguém ter mandado.
+### 4️⃣ O sleep é o BPM
 
-### 3. Encerrar é diferente de pausar
-São duas flags separadas: `estado_` e `encerrar_`. Se fossem a mesma coisa, uma faixa pausada nunca conseguiria ser encerrada — ela estaria dormindo e ninguém a acordaria. Por isso todo `wait` testa `encerrar_` também. Nada de `exit()`, `terminate()` ou matar thread na força bruta: sinaliza-se a flag, dá-se `notify_all()` e faz-se `join()`.
+Em vez de `std::this_thread::sleep_for` (que ficaria "surdo" durante a espera), o loop usa `cv_.wait_for(...)` com timeout: a espera dura o intervalo do BPM, **mas** um `pause` ou um `sair` acorda a thread na hora, sem esperar a batida terminar.
 
-### 4. O sleep é o BPM
-Em vez de `std::this_thread::sleep_for` (que ficaria "surdo" durante a espera), usamos `cv_.wait_for(...)` com timeout. Resultado: a espera dura o intervalo do BPM, **mas** um `pause` ou um `sair` acorda a thread imediatamente, sem esperar a batida terminar. Testado: 100 BPM em 3 s = 5 batidas; 200 BPM = 10 batidas.
+| BPM | Duração testada | Batidas esperadas | Batidas obtidas |
+| :-: | :-: | :-: | :-: |
+| 100 | 3 s | 5 | ✅ 5 |
+| 200 | 3 s | 10 | ✅ 10 |
 
-### 5. Dois níveis de exclusão mútua
-- `Instrumento::mtx_` protege o estado de **uma** faixa (estado, BPM, volume, contador).
-- `MesaDeDJ::faixasMtx_` protege o **vector de faixas**, porque o comando `add` insere itens enquanto a thread do painel percorre a lista. Sem esse mutex, um `push_back` que realoca o vector invalidaria o iterador do painel — e você ganha um crash aleatório que só aparece na hora da apresentação.
-- `Console::mutexTela()` protege o `std::cout`, que também é recurso compartilhado entre a thread do painel e a de comandos.
+### 5️⃣ Dois níveis de exclusão mútua:
 
-### 6. Como evitamos deadlock
-Duas regras seguidas o tempo todo no código:
+| 🔒 Mutex | Protege | Por quê |
+| --- | --- | --- |
+| `Instrumento::mtx_` | Estado de **uma** faixa (estado, BPM, volume, contador) | Cada instrumento é dono só do próprio estado |
+| `MesaDeDJ::faixasMtx_` | O **vector de faixas** | `add` insere itens enquanto a thread do painel percorre a lista — sem o lock, um `push_back` que realoca o vector invalidaria o iterador do painel, e o crash só aparece na hora da apresentação |
+| `Console::mutexTela()` | O `std::cout` | Recurso compartilhado entre a thread do painel e a de comandos |
 
-1. **Ordem fixa de travas:** `faixasMtx_` → `mtx_` do instrumento, nunca o inverso. Na prática nem chegamos a segurar as duas: copiamos os `shared_ptr` sob o `faixasMtx_`, soltamos o lock, e só então chamamos métodos da faixa.
-2. **Nunca fazer operação demorada com o lock na mão.** O `join()` em `encerrar()`, o disparo do áudio no `loop()` e o carregamento do `.wav` em `adicionar()` acontecem todos **fora** da seção crítica. Um `join()` feito com o mutex preso trava para sempre: a thread que morre precisa justamente daquele mutex para terminar.
+### 6️⃣ Como evitamos deadlock?
 
-### 7. RAII
-O destrutor de `Instrumento` chama `encerrar()`, o de `MesaDeDJ` para o painel e encerra todas as faixas. Nenhuma thread vaza, mesmo se o programa sair por uma exceção.
+| Regra | Na prática |
+| --- | --- |
+| 🔢 **Ordem fixa de travas** | `faixasMtx_` → `mtx_` do instrumento, nunca o inverso. Na prática nem chegamos a segurar as duas ao mesmo tempo: copiamos os `shared_ptr` sob `faixasMtx_`, soltamos o lock, e só então chamamos métodos da faixa |
+| ⏳ **Nunca operação longa com lock na mão** | `join()` em `encerrar()`, disparo de áudio no `loop()` e carregamento do `.wav` em `adicionar()` acontecem **fora** da seção crítica — um `join()` com o mutex preso trava para sempre, pois a thread que morre precisa daquele mesmo mutex para terminar |
+
+### 7️⃣ RAII
+
+```
+~Instrumento()  →  encerrar()
+~MesaDeDJ()     →  para o painel + encerra todas as faixas
+```
+
+<del>Nenhuma thread vaza</del>, **mesmo se o programa sair por uma exceção**.
 
 <h2 align="center">🏰 Arquitetura do Projeto <br>
 <img src="https://img.shields.io/badge/Architecture-111827?style=flat-square&logo=instructure&logoColor=white"/></h2>
@@ -307,7 +353,8 @@ Separar em módulos não é enfeite: o `Instrumento` não sabe o que é `std::co
   <tr><td align="center"><img src="img/Mesa_Dj_terminal.jpeg" width="750" alt="Console de Comandos"/></td></tr>
 </table>
 
-## 💡 Ideias para ir além
+<h2 align="center">💡 Ideias para ir além: <br>
+<img src="https://img.shields.io/badge/-Roadmap-111827?style=flat-square&logo=trello&logoColor=yellow" height="18"/></h2>
 
 - Um `bpm global` que multiplica o BPM de todas as faixas (útil para "acelerar a música").
 - `mute`/`solo` por faixa.

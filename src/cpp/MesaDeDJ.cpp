@@ -1,11 +1,9 @@
 #include "MesaDeDJ.h"
-
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-
 #include "Console.h"
 
 MesaDeDJ::MesaDeDJ(AudioEngine& audio) : audio_(audio) {}
@@ -181,14 +179,14 @@ void MesaDeDJ::desenhar() const
 
     std::ostringstream out;
     out << "+==============================================================+\n"
-        << "|                    M E S A   D E   D J                       |\n"
+        << "|                    M E S A   D E   D J  🎧🎤                  |\n"
         << "+--------------+-----------+-------+--------+------------------+\n"
         << "| FAIXA        | ESTADO    |  BPM  |  VOL   | BATIDAS          |\n"
         << "+--------------+-----------+-------+--------+------------------+\n";
 
     if (faixas.empty())
     {
-        out << "|            (nenhuma faixa carregada)                         |\n";
+        out << "|            (nenhuma faixa carregada ainda)                      |\n";
     }
 
     for (const auto& f : faixas)
@@ -201,7 +199,7 @@ void MesaDeDJ::desenhar() const
 
         for (int i = 0; i < 5; ++i) barra += (i < cheios ? '#' : '.');
 
-        out << "| " << std::left  << std::setw(12) << s.nome.substr(0, 12)
+        out << " | " << std::left  << std::setw(12) << s.nome.substr(0, 12)
             << " | " << std::setw(9) << paraTexto(s.estado)
             << " | " << std::right << std::setw(5) << s.bpm
             << " | " << barra << " "
@@ -209,7 +207,7 @@ void MesaDeDJ::desenhar() const
 
         if (!s.comSom)
         {
-            out << "|   ^ sem audio (arquivo nao carregado)                        |\n";
+            out << " |   ^ sem áudio (arquivo não carregado)                        |\n";
         }
     }
 
