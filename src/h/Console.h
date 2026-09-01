@@ -8,7 +8,8 @@
 // Se a thread do painel e a thread de comandos escreverem ao mesmo tempo,
 // o texto sai embaralhado. Por isso toda escrita passa por este mutex.
 // ---------------------------------------------------------------------------
-namespace Console {
+namespace Console
+{
 
 // Mutex global do console. Use sempre com std::lock_guard.
 std::mutex& mutexTela();

@@ -23,10 +23,12 @@ std::string paraTexto(Estado e);
 //  * encerrar_ e uma flag separada do estado: "pausar" nao mata a thread e
 //    "encerrar" consegue acordar uma thread que esta pausada.
 // ---------------------------------------------------------------------------
-class Instrumento {
+class Instrumento
+{
 public:
     // Fotografia consistente do estado, tirada de uma vez so sob o lock.
-    struct Status {
+    typedef struct Status
+    {
         std::string   nome;
         std::string   arquivo;
         Estado        estado;
@@ -34,7 +36,7 @@ public:
         int           volume;
         unsigned long batidas;
         bool          comSom;
-    };
+    } Status;
 
     Instrumento(std::string nome, std::string arquivo, int bpm, AudioEngine& audio);
     ~Instrumento();
